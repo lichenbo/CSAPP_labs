@@ -7,6 +7,7 @@ import email.encoders
 import email.message
 import hashlib
 import os
+import subprocess
 import sys
 import urllib.request, urllib.parse
 
@@ -35,6 +36,8 @@ def parse_cmd_args():
                         help='Submission password.')
     parser.add_argument('-f', '--force', action='store_true',
                         help='Submit without prompts.')
+    parser.add_argument('-nc', '--no-check', action='store_true',
+                        help='Submit without doing Makefile checks.')
     parser.add_argument('--course_materials', type=filepath,
                         default='~/course-materials',
                         help='Path to course materials directory.')
@@ -126,6 +129,23 @@ def submit_part(partSID, file):
     return submit_file(file, session_name, login,
                        ch_resp, partSID, state, ch_aux)
 
+def checkSubmission(path, config):
+    makefile = os.path.join(path, 'Makefile')
+    if os.path.isfile(makefile):
+        print('Checking submission...')
+        success = True
+        with open(os.devnull, 'w') as null:
+            mkdir = '--directory=%s' % path
+            subprocess.call(['make', mkdir, 'clean'], stdout=null, stderr=null)
+            for part in config:
+                check = 'check-%s' % os.path.basename(part['file'])
+                cmd = ['make', '-s', mkdir, check]
+                returncode = subprocess.call(cmd, stderr=null)
+                if returncode != 0:
+                    success = False
+                    print('\033[31;5mWarning:\033[m Failed `make %s`' % check)
+        if success: print('Check succeeded!')
+
 if __name__ == '__main__':
     args = parse_cmd_args()
 
@@ -173,6 +193,8 @@ if __name__ == '__main__':
     if not args.force:
         print('%s submission:' % part_split[0])
         for part in config: print('  '+part['file'])
+        if not args.no_check:
+            checkSubmission(assign_path, config)
         while True:
             print('Are you sure you wish to submit the previous file(s)? [Y/n]')
             choice = input().strip().lower()
