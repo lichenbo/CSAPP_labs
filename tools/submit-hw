@@ -145,6 +145,7 @@ def checkSubmission(path, config):
                     success = False
                     print('\033[31;5mWarning:\033[m Failed `make %s`' % check)
         if success: print('Check succeeded!')
+        else: print('Check failed...')
 
 if __name__ == '__main__':
     args = parse_cmd_args()
@@ -174,6 +175,13 @@ if __name__ == '__main__':
         if not config:
             print('No submission part matches \'%s\' in the %s assignment!' % (part_split[1],part_split[0]),
                   file=sys.stderr)
+            sys.exit(1)
+    else: # Scrub optional parts
+        config = list(filter(lambda part: not part.get('optional',False), config))
+        if not config:
+            print('No required files to submit for \'%s\'.' % part_split[0],
+                  file=sys.stderr)
+            print('Please specify part to submit.', file=sys.stderr)
             sys.exit(1)
 
     # Get user credentials
