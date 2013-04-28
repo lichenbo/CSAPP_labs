@@ -84,9 +84,10 @@ int intSize() {
   int intArray[10];
   int * intPtr1;
   int * intPtr2;
-  // TODO: Write code to compute size of an integer.
+  intPtr1 = intArray;
+  intPtr2 = &intArray[1];
 
-  return 2;
+  return (char*)intPtr2 - (char*)intPtr1;
 }
 
 /*
@@ -96,9 +97,10 @@ int doubleSize() {
   double doubArray[10];
   double * doubPtr1;
   double * doubPtr2;
-  // TODO: Write code to compute size of a double.
+  doubPtr1 = doubArray;
+  doubPtr2 = &doubArray[1];
 
-  return 2;
+  return (char*)doubPtr2 - (char*)doubPtr1;
 }
 
 /*
@@ -108,9 +110,9 @@ int pointerSize() {
   double * ptrArray[10];
   double ** ptrPtr1;
   double ** ptrPtr2;
-  // TODO: Write code to compute size of a pointer.
-
-  return 2;
+  ptrPtr1 = ptrArray;
+  ptrPtr2 = &ptrArray[1];
+  return (char*)ptrPtr2 - (char*)ptrPtr1;
 }
 
 /*
@@ -121,9 +123,8 @@ int changeValue() {
   int intArray[10];
   int * intPtr1 = intArray;
   int * intPtr2;
-  // TODO: Write code to change value of intArray[5] to 351 using only
-  //       intPtr1 and the + operator.
-
+  intPtr2 = intPtr1 + 5;
+  *intPtr2 = 351;
   return intArray[5];
 }
 
@@ -135,8 +136,7 @@ int changeValue() {
  * Operators / and % and loops are NOT allowed.
  */
 int withinSameBlock(int * ptr1, int * ptr2) {
-  // TODO
-  return 2;
+  return ((int)ptr1 >> 6) << 6 == ((int)ptr2 >> 6) << 6;
 }
 
 /*
@@ -144,8 +144,10 @@ int withinSameBlock(int * ptr1, int * ptr2) {
  * 0 otherwise.
  */
 int withinArray(int * intArray, int size, int * ptr) {
-  // TODO
-  return 2;
+  int* endArray = intArray + size;
+  int x = (ptr - intArray >> 31) == 0;
+  int y = (endArray - ptr) >> 31 == 0 && (~((endArray - ptr) == 0)+2);
+  return x&y ;
 }
 /*
  * Return x with the n bits that begin at position p inverted (i.e.,
@@ -153,6 +155,9 @@ int withinArray(int * intArray, int size, int * ptr) {
  * the indices of x to begin with the low-order bit numbered as 0.
  */
 int invert(int x, int p, int n) {
-  // TODO
-  return 2;
+  int mask1 = -1;
+  mask1 = mask1 << p;
+  int mask2 = -1;
+  mask2 = ~(mask2 << (p+n));
+  return x^(mask1&mask2);
 }

@@ -131,5 +131,13 @@ int main(int argc, char* argv[]) {
   // you would expect. (Hint, you'll need to use the
   // -> operator to access fields of a FourInts*
   // variable instead of the . operator).
+  
+  FourInts* fourints = (FourInts*)malloc(sizeof(FourInts));
+  fillArray((int*)fourints,4);
+  assert(fourints->a == 2); 
+  assert(fourints->b == 5);
+  assert(fourints->c == 8);
+  assert(fourints->d == 11);
+  free(fourints);
   return 0;
 }

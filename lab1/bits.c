@@ -120,7 +120,7 @@ NOTES:
  *   Rating: 1
  */
 int bitAnd(int x, int y) {
-  return 2;
+  return ~((~x)|(~y));
 }
 /* 
  * bitXor - x^y using only ~ and & 
@@ -130,7 +130,7 @@ int bitAnd(int x, int y) {
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return 2;
+  return ~((~(x&~y))&~(y&~x));
 }
 /* 
  * thirdBits - return word with every third bit (starting from the LSB) set to 1
@@ -140,7 +140,11 @@ int bitXor(int x, int y) {
  *   Rating: 1
  */
 int thirdBits(void) {
-  return 2;
+  int a = 0x49;
+  int b = a >> 1;
+  int c = a << 1;
+  int d = a;
+  return (a << 24)+(b << 16)+(c << 8)+d;
 }
 // Rating: 2
 /* 
@@ -153,7 +157,9 @@ int thirdBits(void) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-  return 2;
+  int new = (x << (32 + (~n+1))) >> (32 + (~n+1));
+  int result = !(new ^ x);
+  return result;
 }
 /* 
  * sign - return 1 if positive, 0 if zero, and -1 if negative
@@ -164,7 +170,7 @@ int fitsBits(int x, int n) {
  *  Rating: 2
  */
 int sign(int x) {
-  return 2;
+  return (x>>31)+(x>>31)+(!!x);
 }
 /* 
  * getByte - Extract byte n from word x
@@ -175,7 +181,7 @@ int sign(int x) {
  *   Rating: 2
  */
 int getByte(int x, int n) {
-  return 2;
+  return (x >> (n << 3))&(0x0ff);
 }
 // Rating: 3
 /* 
@@ -187,7 +193,8 @@ int getByte(int x, int n) {
  *   Rating: 3 
  */
 int logicalShift(int x, int n) {
-  return 2;
+  int result = (x >> n) & ~((((0xff << 24)+(0xff << 16)+(0xff << 8)+0xff) << (32+(~n)))<<1);
+  return result;
 }
 /* 
  * addOK - Determine if can compute x+y without overflow
@@ -198,7 +205,7 @@ int logicalShift(int x, int n) {
  *   Rating: 3
  */
 int addOK(int x, int y) {
-  return 2;
+  return !((!((x^y)>>31))&(((x+y)^y)>>31));
 }
 // Rating: 4
 /* 
@@ -209,7 +216,13 @@ int addOK(int x, int y) {
  *   Rating: 4 
  */
 int bang(int x) {
-  return 2;
+  int x1 = x|(x>>16);
+  int x2 = x1|(x1>>8);
+  int x3 = x2|(x2>>4);
+  int x4 = x3|(x3>>2);
+  int x5 = x4|(x4>>1);
+  int x6 = (~x5)&1;
+  return x6;
 }
 // Extra Credit: Rating: 3
 /* 
