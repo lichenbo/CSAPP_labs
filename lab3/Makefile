@@ -35,6 +35,7 @@ check-bang.txt: test-bang.txt $(RESULTS)
 	rm $(RESULTS)
 
 check-dynamite.txt: test-dynamite.txt $(RESULTS)
+	grep -q "Boom!" $(RESULTS)
 	grep -q "Level 3 VALID" $(RESULTS)
 	rm $(RESULTS)
 
