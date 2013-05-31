@@ -358,6 +358,34 @@ void mm_free (void *ptr) {
 
 }
 
+/* Print the heap by iterating through it as an implicit free list. */
+static void examine_heap() {
+  BlockInfo *block;
+
+  fprintf(stderr, "FREE_LIST_HEAD: %p\n", (void *)FREE_LIST_HEAD);
+
+  for(block = (BlockInfo*)POINTER_ADD(mem_heap_lo(), WORD_SIZE); /* first block on heap */
+      SIZE(block->sizeAndTags) != 0 && block < mem_heap_hi();
+      block = (BlockInfo*)POINTER_ADD(block, SIZE(block->sizeAndTags))) {
+
+    /* print out common block attributes */
+    fprintf(stderr, "%p: %ld %ld %ld\t",
+            (void*)block,
+            SIZE(block->sizeAndTags),
+            block->sizeAndTags & TAG_PRECEDING_USED,
+            block->sizeAndTags & TAG_USED);
+
+    /* and allocated/free specific data */
+    if (block->sizeAndTags & TAG_USED) {
+      fprintf(stderr, "ALLOCATED\n");
+    } else {
+      fprintf(stderr, "FREE\tnext: %p, prev: %p\n",
+              (void*)block->next,
+              (void*)block->prev);
+    }
+  }
+  fprintf(stderr, "END OF HEAP\n\n");
+}
 
 // Implement a heap consistency checker as needed.
 int mm_check() {
