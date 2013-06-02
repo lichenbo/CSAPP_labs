@@ -4,26 +4,25 @@ Lab 4 - Mystery Caches
 
 Mystery Cache Geometries (for you to keep notes):
 mystery0:
-    block size =
-    cache size =
-    associativity =
+    block size = 64
+    cache size = 4096
+    associativity = 32
 mystery1:
-    block size =
-    cache size =
-    associativity =
+    block size = 8
+    cache size = 8192
+    associativity = 8
 mystery2:
-    block size =
-    cache size =
-    associativity =
+    block size = 32
+    cache size = 32768
+    associativity = 2
 mystery3:
-    block size =
-    cache size =
-    associativity =
+    block size = 16
+    cache size = 4096
+    associativity = 1
 */
 
 #include <stdlib.h>
 #include <stdio.h>
-
 #include "mystery-cache.h"
 
 /*
@@ -38,26 +37,47 @@ mystery3:
    Returns the size (in B) of each block in the cache.
 */
 int get_block_size(void) {
-  /* YOUR CODE GOES HERE */
-
-  return -1;
+  access_cache(0x0);
+  int iter = 1;
+  while(access_cache(iter) == TRUE) {
+    iter++;
+  }
+  flush_cache();
+  return iter;
 }
 
 /*
    Returns the size (in B) of the cache.
 */
 int get_cache_size(int size) {
-  /* YOUR CODE GOES HERE */
-
-  return -1;
+  flush_cache();
+  addr_t addr;
+  for (addr = 0; ; addr += size) {
+    addr_t addr_temp;
+    access_cache(addr);
+    for (addr_temp = 0; addr_temp <= addr; addr_temp+=size) {
+      bool_t access_result = access_cache(addr_temp);
+      if (access_result == FALSE) {
+        return addr;
+      }
+    }
+  }
 }
 
 /*
    Returns the associativity of the cache.
 */
 int get_cache_assoc(int size) {
-  /* YOUR CODE GOES HERE */
-
+  addr_t addr,addr_temp;
+  for(addr = 0;1; addr+=size){
+    access_cache(addr);
+    for(addr_temp = 0;addr_temp <= addr;addr_temp+=size){
+      if(access_cache(addr_temp)==FALSE){
+        return addr/size;
+      }
+    }
+  }
+  
   return -1;
 }
 
