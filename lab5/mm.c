@@ -319,16 +319,19 @@ int mm_init () {
 
 /* Allocate a block of size size and return a pointer to it. */
 void* mm_malloc (size_t size) {
+  fprintf(stderr,"========\n%s\n","Malloc Start.");
   size_t reqSize;
   BlockInfo * ptrFreeBlock = NULL;
   size_t blockSize;
   size_t precedingBlockUseTag;
+  BlockInfo * ptrRemainBlock = NULL;
+  size_t * ptrRemainBlockFooter = NULL;
 
   // Zero-size requests get NULL.
   if (size == 0) {
     return NULL;
   }
-
+  fprintf(stderr,"size asked:%x\n",size);
   // Add one word for the initial size header.
   // Note that we don't need to boundary tag when the block is used!
   size += WORD_SIZE;
@@ -345,17 +348,56 @@ void* mm_malloc (size_t size) {
   // Implement mm_malloc.  You can change or remove any of the above
   // code.  It is included as a suggestion of where to start.
   // You will want to replace this return statement...
-  return NULL; }
+    fprintf(stderr,"Require Size : %x\n",reqSize);
+    ptrFreeBlock = searchFreeList(reqSize);
+    fprintf(stderr,"ptrFreeBlock first: %x\n---------\n",ptrFreeBlock);
+    if (ptrFreeBlock == NULL) {
+      requestMoreSpace(reqSize);
+      ptrFreeBlock = searchFreeList(reqSize);
+    }
+    fprintf(stderr,"ptrFreeBlockGiven:%x\nsizeAndTags:%x\n",ptrFreeBlock,ptrFreeBlock->sizeAndTags);
+    blockSize = SIZE(ptrFreeBlock->sizeAndTags);
+    if (blockSize < reqSize + MIN_BLOCK_SIZE) {
+      reqSize = blockSize;
+    }
+    removeFreeBlock(ptrFreeBlock);
+    fprintf(stderr,"blockSize:%x\n--------\n",blockSize);
+    precedingBlockUseTag = ptrFreeBlock->sizeAndTags & TAG_PRECEDING_USED;
+    ptrFreeBlock->sizeAndTags = reqSize | precedingBlockUseTag | TAG_USED;
+    fprintf(stderr,"ptrFreeBlockSplitFirst:%x\nsizeAndTags:%x\n----------\n",ptrFreeBlock,ptrFreeBlock->sizeAndTags);
+    ptrRemainBlock = (BlockInfo *)POINTER_ADD(ptrFreeBlock,reqSize);
+    if (reqSize != blockSize) {
+      ptrRemainBlock->sizeAndTags = (blockSize-reqSize) | TAG_PRECEDING_USED;
+      ptrRemainBlockFooter = (size_t *)POINTER_ADD(ptrFreeBlock,blockSize-WORD_SIZE);
+      (*ptrRemainBlockFooter) = ptrRemainBlock->sizeAndTags;
+      insertFreeBlock(ptrRemainBlock);
+    }
+    else {
+      ptrRemainBlock->sizeAndTags = ptrRemainBlock->sizeAndTags | TAG_PRECEDING_USED;
+      ptrRemainBlockFooter = (size_t *)POINTER_ADD(ptrRemainBlock,SIZE(ptrRemainBlock->sizeAndTags)-WORD_SIZE); 
+      (*ptrRemainBlockFooter) = ptrRemainBlock->sizeAndTags;
+    }
+    fprintf(stderr,"ptrFreeBlockSplitSecond:%x\nsizeAndTags:%x\nnext:%x\nprev:%x\nfooter:%x\n---------\n",ptrRemainBlock,ptrRemainBlock->sizeAndTags,ptrRemainBlock->next,ptrRemainBlock->prev,ptrRemainBlockFooter);
+  return (void *)POINTER_ADD(ptrFreeBlock,WORD_SIZE); }
 
 /* Free the block referenced by ptr. */
 void mm_free (void *ptr) {
   size_t payloadSize;
+  size_t blockSize;
   BlockInfo * blockInfo;
   BlockInfo * followingBlock;
-
-  // Implement mm_free.  You can change or remove the declaraions
-  // above.  They are included as minor hints.
-
+  blockInfo = (BlockInfo *)POINTER_SUB(ptr, WORD_SIZE);
+  followingBlock = (BlockInfo *)POINTER_ADD(blockInfo, blockInfo->sizeAndTags);
+  blockSize = SIZE(blockInfo -> sizeAndTags);
+  payloadSize = blockSize - WORD_SIZE;
+  blockInfo->sizeAndTags = blockInfo->sizeAndTags & ~TAG_USED; // Unused
+  *(size_t *)POINTER_ADD(blockInfo,payloadSize) = blockInfo->sizeAndTags;
+  followingBlock->sizeAndTags = followingBlock->sizeAndTags & ~TAG_PRECEDING_USED; // Precedingly Unused
+  if(followingBlock->sizeAndTags & TAG_USED == 0) {
+    *(size_t *)POINTER_ADD(followingBlock,SIZE(followingBlock->sizeAndTags)-WORD_SIZE) = followingBlock->sizeAndTags;
+  }
+  insertFreeBlock(blockInfo);
+  coalesceFreeBlock(blockInfo);
 }
 
 /* Print the heap by iterating through it as an implicit free list. */
@@ -389,5 +431,6 @@ static void examine_heap() {
 
 // Implement a heap consistency checker as needed.
 int mm_check() {
+  examine_heap();
   return 0;
 }
